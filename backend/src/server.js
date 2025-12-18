@@ -1,39 +1,26 @@
-import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { ENV } from './config/env.js';
-import { connectDB } from './config/db.js';
-import { clerkMiddleware } from '@clerk/express'
+import express from "express";
+import { ENV } from "./config/env.js";
+import { connectDB } from "./config/db.js";
+import { clerkMiddleware } from "@clerk/express";
+import { serve } from "inngest/express";
+import { inngest, functions } from "./config/inngest.js";
 
 const app = express();
 
+app.use(express.json());
+app.use(clerkMiddleware());
 
+app.use("/api/inngest", serve({ client: inngest, functions }));
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-app.use(clerkMiddleware())
-
-app.get('/api', (req, res) => {
+app.get("/api", (req, res) => {
   res.status(200).json({ message: "success" });
 });
 
-if (ENV.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../../admin/dist")));
-
-  // ✅ SPA fallback (NO regex, NO '*')
-  app.use((req, res) => {
-    // ignore asset files
-    if (req.path.includes('.')) return;
-
-    res.sendFile(
-      path.join(__dirname, "../../admin/dist/index.html")
-    );
-  });
-}
-
-const startServer= async()=>{
+const startServer = async () => {
   await connectDB();
-  app.listen(ENV.PORT,()=>{console.log("Server Started.....")});
-}
+  app.listen(ENV.PORT, () => {
+    console.log(`Server running on port ${ENV.PORT}`);
+  });
+};
 
 startServer();
