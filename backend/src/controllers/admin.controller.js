@@ -70,8 +70,8 @@ export const updateProducts = async (req, res) => {
 
     if (name) product.name = name;
     if (description) product.description = description;
-    if (price) product.price = Number(price);
-    if (stock) product.stock = Number(stock);
+    if (price !== undefined) product.price = Number(price);
+    if (stock !== undefined) product.stock = Number(stock);
     if (category) product.category = category;
 
     if (req.files && req.files.length > 0) {
