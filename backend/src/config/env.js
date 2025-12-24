@@ -19,4 +19,7 @@ export const ENV = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+
+  //Authenticated mail for Admin login
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
 };
