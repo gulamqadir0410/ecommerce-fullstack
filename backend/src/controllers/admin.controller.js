@@ -50,7 +50,7 @@ export const createProduct = async (req, res) => {
 export const getAllProducts = async (_, res) => {
   try {
     //-1 descending order most recent first.
-    const products = Product.find().sort({ createdAt: -1 });
+    const products = await Product.find().sort({ createdAt: -1 });
     res.status(200).json(products);
   } catch (error) {
     console.error("Issue in Fethcing Products", error);
@@ -125,7 +125,7 @@ export const updateOrderStatus = async (req, res) => {
 
     const order = await Order.findById(orderId);
 
-    if (!orderId) {
+    if (!order) {
       return res.status(404).json({ message: `Cannot find Valid Order with id: ${orderId}` });
     }
 
@@ -138,6 +138,9 @@ export const updateOrderStatus = async (req, res) => {
     if (status === "delivered" && !order.deliveredAt) {
       order.deliveredAt = new Date();
     }
+
+    await order.save();
+    res.status(200).json(order);
 
   }
   catch (error) {
@@ -175,9 +178,9 @@ export const getDashboardStats = async (_, res) => {
     ]);
     const totalRevenue = revenueResult[0]?.totalPrice || 0;
 
-    const totalProducts = Product.countDocuments();
+    const totalProducts = await Product.countDocuments();
 
-    const totalCustomers = Product.countDocuments();
+    const totalCustomers = await User.countDocuments();
 
     res.status(200).json({
       totalRevenue,
