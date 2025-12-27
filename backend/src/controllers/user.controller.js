@@ -13,6 +13,12 @@ export async function addAddress(req, res) {
       isDefault,
     } = req.body;
 
+    if (!fullName || !streetAddress || !city || !state || !zipCode || !phoneNumber) {
+      return res.status(400).json({
+        message: "Missing required fields: fullName, streetAddress, city, state, zipCode, phoneNumber"
+      });
+    }
+
     const user = req.user;
 
     // If setting this address as default, unset others
@@ -56,7 +62,7 @@ export async function getAddresses(req, res) {
   }
 }
 
-export async function updateAddress(req, res) { 
+export async function updateAddress(req, res) {
   try {
     const {
       label,
@@ -114,7 +120,7 @@ export async function deleteAddress(req, res) {
       return res.status(404).json({ message: "Address Not Found" });
     }
 
-    user.address.pull(addressId);
+    user.addresses.pull(addressId);
     await user.save();
 
     res.status(200).json({
