@@ -44,28 +44,33 @@ export async function createOrders(req, res) {
 }
 
 export async function getOrders(req, res) {
-    try {
+  try {
+    const orders = await Order.find({ clerkId: req.user.clerkId })
+      .populate("orderItems.product")
+      .sort({ createdAt: -1 });
 
-        const orders = await Order.find({ clerkId: req.user.clerkId }).populate("orderItems.product").sort({ createdAt: -1 });
+    // 1️⃣ Collect all order IDs
+    const orderIds = orders.map(order => order._id);
 
-        //check if order is reviewed or not.
+    // 2️⃣ Fetch all reviews for these orders in ONE query
+    const reviews = await Review.find({
+      orderId: { $in: orderIds },
+    });
 
-        const orderswWithReviewStatus = await Promise.all(
-            orders.map(async (order) => {
-                const review = await Review.findOne({ orderId: order._id });
-                return {
-                    ...order.toObject(),
-                    hasReceived: !!review,
-                }
-            })
-        );
+    // 3️⃣ Create a Set of reviewed order IDs for O(1) lookup
+    const reviewedOrderIds = new Set(
+      reviews.map(review => review.orderId.toString())
+    );
 
-        res.status(200).json({ orders:orderswWithReviewStatus });
+    // 4️⃣ Attach hasReviewed flag to each order
+    const ordersWithReviewStatus = orders.map(order => ({
+      ...order.toObject(),
+      hasReceived: reviewedOrderIds.has(order._id.toString()),
+    }));
 
-
-
-    } catch (error) {
-        console.error("Error in GetOrder Controller");
-        res.status(500).json({ message: "Cannot Get The Order" })
-    }
+    res.status(200).json({ orders: ordersWithReviewStatus });
+  } catch (error) {
+    console.error("Error in GetOrder Controller", error);
+    res.status(500).json({ message: "Cannot Get The Order" });
+  }
 }
