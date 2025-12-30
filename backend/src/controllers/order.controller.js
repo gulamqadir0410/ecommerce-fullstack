@@ -13,17 +13,17 @@ export async function createOrders(req, res) {
 
         for (const item of orderItems) {
             const product = await Product.findById(item.product._id);
-            if (!product) {
-                return res.status(404).json({ error: `Product ${item.name} found.` })
+             if (!product) {
+                return res.status(404).json({ error: `Product ${item.name} not found.` })
             }
             if (product.stock < item.quantity) {
-                return res.status(404).json({ error: `Product Out Of Stock for ${product.name}` })
+                return res.status(400).json({ error: `Product Out Of Stock for ${product.name}` })
             }
         }
 
-        const order = await Order.create({
+         const order = await Order.create({
             user: user._id,
-            clerkId: user.clearkId,
+            clerkId: user.clerkId,
             orderItems,
             shippingAddress,
             paymentResult,
@@ -31,9 +31,9 @@ export async function createOrders(req, res) {
         });
 
         //update product stock. after making order decrement from the stock -1.
-        for (const item in orderItems) {
-            await Product.findByIdAndUpdate(item.product._id, { $inc: { stock: -item.quantity }, });
-        }
+        for (const item of orderItems) {
+            await Product.findByIdAndUpdate(item.product._id, { $inc: { stock: -item.quantity } });
+         }
 
         res.status(201).json({ message: "Order Created Successfully,", order });
     }
